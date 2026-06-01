@@ -15,7 +15,7 @@ def root():
 @app.post("/message")
 def getResponse(message: str) -> str:
     response = client.models.generate_content(
-        model="gemini-flash-latest",
+        model="gemini-2.5-flash",
         contents=message,
     )
     return response.text
