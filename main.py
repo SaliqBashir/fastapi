@@ -61,13 +61,3 @@ def todo(item: List):
 @app.get("/get_item")
 def todo_get(num: int = 10):
     return lists[0:num]
-
-@app.put("/items/{}")
-
-
-
-
-
-
-
-
