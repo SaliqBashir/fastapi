@@ -41,6 +41,7 @@ def require_auth(func):
 @app.middleware("http")
 async def rate_limit(request: Request, call_next):
     ip = request.client.host
+    print(ip)
     current_time = time.time()
     if ip not in requests:
         requests[ip] = []
@@ -49,7 +50,7 @@ async def rate_limit(request: Request, call_next):
         for timestamp in requests[ip]
         if current_time - timestamp < 60
     ]
-    if len(requests[ip]) > 5:
+    if len(requests[ip]) >= 5:
         return JSONResponse(
             status_code=429,
             content={"detail": "Too many requests."}
