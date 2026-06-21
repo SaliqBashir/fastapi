@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request, Depends
 from pydantic import BaseModel
 import time
-from functools import wraps
 from fastapi.responses import JSONResponse
 import models
 from database import engine, SessionLocal
@@ -41,17 +40,13 @@ def get_db():
         db.close()
 
 
-def require_auth(func):
-    @wraps(func)
-    def wrapper(*args, request: Request, **kwargs):
-        api_key = request.headers.get("X-API-Key")
-        if api_key != "secret123":
-            raise HTTPException(
-                status_code=401,
-                detail="Unauthorized"
-            )
-        return func(*args, request=request, **kwargs)
-    return wrapper
+def require_auth(request: Request):
+    api_key = request.headers.get("X-API-Key")
+    if api_key != "secret123":
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized"
+        )
 
 
 @app.middleware("http")
@@ -83,29 +78,26 @@ def get_users(db: Session = Depends(get_db)):
 @app.get("/users/{user_id}", response_model=User, status_code=200)
 def get_user(
     user_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     user_model = (
         db.query(models.Users)
         .filter(models.Users.id == user_id)
         .first()
     )
-
     if user_model is None:
         raise HTTPException(
             status_code=404,
             detail="Invalid user id"
         )
-
     return user_model
 
 
 @app.post("/users", response_model=User, status_code=201)
-@require_auth
-def create_item(
+def create_user(
         user: UserCreate,
-        request: Request,
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        _: None = Depends(require_auth)
 ):
     user_model = models.Users()
     user_model.age = user.age
@@ -116,12 +108,11 @@ def create_item(
 
 
 @app.put("/users/{user_id}", response_model=User, status_code=200)
-@require_auth
 def update_user(
         user_id: int,
         new_user: UserUpdate,
-        request: Request,
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        _: None = Depends(require_auth)
 ):
     user_model = db.query(
         models.Users).filter(
@@ -136,12 +127,11 @@ def update_user(
 
 
 @app.patch("/users/{user_id}", response_model=User, status_code=200)
-@require_auth
 def patch_user(
         user_id: int,
         patch: UserPatch,
-        request: Request,
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        _: None = Depends(require_auth)
 ):
     user_model = db.query(
         models.Users).filter(
@@ -155,11 +145,10 @@ def patch_user(
 
 
 @app.delete("/users/{user_id}", status_code=204)
-@require_auth
 def delete_user(
     user_id: int,
-    request: Request,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: None = Depends(require_auth)
 ):
     user_model = (
         db.query(models.Users)

@@ -1,10 +1,10 @@
-from sqlalchemy import Column, Integer, String
 from database import Base
+from sqlalchemy.orm import Mapped, mapped_column
 
 
 class Users(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    age = Column(Integer)
-    email = Column(String)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    age: Mapped[int]
+    email: Mapped[str]
